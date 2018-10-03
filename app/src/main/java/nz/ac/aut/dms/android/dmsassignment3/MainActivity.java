@@ -14,12 +14,15 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity
 {
 	private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
 	Button button;
+	TextView phone;
+	String number;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -29,12 +32,15 @@ public class MainActivity extends AppCompatActivity
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
+		phone = findViewById(R.id.editText);
+
 		button = findViewById(R.id.button2);
 		button.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View view)
 			{
+				number = button.getText().toString();
 				sendSMSMessage();
 			}
 		});
@@ -68,7 +74,7 @@ public class MainActivity extends AppCompatActivity
 			try
 			{
 				SmsManager smsManager = SmsManager.getDefault();
-				smsManager.sendTextMessage("0272269596", null, "Hello World", null, null);
+				smsManager.sendTextMessage(number, null, "Hello World", null, null);
 				Toast.makeText(getApplicationContext(), "SMS sent.", Toast.LENGTH_LONG).show();
 			}
 			catch (Exception e)
