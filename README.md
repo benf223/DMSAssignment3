@@ -1,5 +1,5 @@
-# DMSAssignment2
-Second assignment for Distributed Mobile Systems
+# DMSAssignment3
+Third assignment for Distributed Mobile Systems
 
 # Developed by
 Ben Fisher ID: 15906291
