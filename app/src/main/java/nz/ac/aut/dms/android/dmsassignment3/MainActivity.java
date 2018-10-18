@@ -2,8 +2,12 @@ package nz.ac.aut.dms.android.dmsassignment3;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
@@ -25,7 +29,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity implements LocationListener
 {
 	private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
 	private static final boolean DEBUG = true;
@@ -34,6 +38,9 @@ public class MainActivity extends AppCompatActivity
 
 	ArrayList<AndroidContact> foundContacts;
 	HashMap<String, CheckBox> checkBoxes;
+
+	private boolean wantLocationUpdates;
+	private static final String UPDATES_BUNDLE_KEY = "WantsLocationUpdates";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -47,6 +54,14 @@ public class MainActivity extends AppCompatActivity
 		contacts = findViewById(R.id.contactsCheckBoxes);
 
 		inflateContactsList();
+
+		if(savedInstanceState != null && savedInstanceState.containsKey(UPDATES_BUNDLE_KEY)){
+			wantLocationUpdates = savedInstanceState.getBoolean(UPDATES_BUNDLE_KEY);
+		}
+		else{
+			//not being reinit
+			wantLocationUpdates = false;
+		}
 
 		submitButton = findViewById(R.id.Send);
 		submitButton.setOnClickListener(new View.OnClickListener()
@@ -156,6 +171,25 @@ public class MainActivity extends AppCompatActivity
 		}
 	}
 
+	private void startGPS() {
+		if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+			LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+			String provider = LocationManager.GPS_PROVIDER;
+			locationManager.requestLocationUpdates(provider, 0, 0,this );//retrieve location updates async
+			Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+
+			if(lastKnownLocation != null){
+				//output
+			}
+		}
+
+	}
+
+	private void stopGPS(){
+		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.removeUpdates(this);
+	}
+
 	private void sendSMSMessages()
 	{
 		String location = getLocation();
@@ -222,7 +256,27 @@ public class MainActivity extends AppCompatActivity
 		return super.onOptionsItemSelected(item);
 	}
 
-	private class AndroidContact
+    @Override
+    public void onLocationChanged(Location location) {
+
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
+    }
+
+    private class AndroidContact
 	{
 		public String contactName = "";
 		public String contactPhoneNumber = "";
