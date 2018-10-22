@@ -2,16 +2,13 @@ package nz.ac.aut.dms.android.dmsassignment3;
 
 import android.Manifest;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -41,94 +38,78 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
-	private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
-	private static final boolean DEBUG = false;
-
 	Button submitButton;
 	LinearLayout contacts;
 
 	ArrayList<AndroidContact> foundContacts;
 	HashMap<String, CheckBox> checkBoxes;
 
-	private boolean wantLocationUpdates;
-	private static final String UPDATES_BUNDLE_KEY = "WantsLocationUpdates";
 	private boolean sendMessage = false;
 	private FusedLocationProviderClient mFusedLocationClient;
 	private LocationCallback mLocationCallback;
 
-	@Override
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        getPermissions();
+    }
+
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		Toolbar toolbar = findViewById(R.id.toolbar);
-		setSupportActionBar(toolbar);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-		getPermissions();
+        contacts = findViewById(R.id.contactsCheckBoxes);
 
-		contacts = findViewById(R.id.contactsCheckBoxes);
+        inflateContactsList();
 
-		inflateContactsList();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        LocationRequest r = new LocationRequest();
+        r.setInterval(1);
+        r.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-		if (savedInstanceState != null && savedInstanceState.containsKey(UPDATES_BUNDLE_KEY)) {
-			wantLocationUpdates = savedInstanceState.getBoolean(UPDATES_BUNDLE_KEY);
-		} else {
-			wantLocationUpdates = false;
-		}
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
 
-		mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-		LocationRequest r = new LocationRequest();
-		r.setInterval(1);
-		r.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                for (Location location : locationResult.getLocations()) {
+                    if (sendMessage) {
+                        generateRequest(location);
+                    }
+                }
+            }
+        };
 
-		mLocationCallback = new LocationCallback() {
-			@Override
-			public void onLocationResult(LocationResult locationResult) {
-				if (locationResult == null) {
-					return;
-				}
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mFusedLocationClient.requestLocationUpdates(r, mLocationCallback, null);
+        }
 
-				for (Location location : locationResult.getLocations()) {
-					if (sendMessage) {
-						generateRequest(location);
-					}
-				}
-			}
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        generateRequest(location);
+                    }
+                }
+            });
+        }
 
-			;
-		};
-
-		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-			mFusedLocationClient.requestLocationUpdates(r, mLocationCallback, null);
-		}
-
-		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-			mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-				@Override
-				public void onSuccess(Location location) {
-					if (location != null) {
-						generateRequest(location);
-					}
-				}
-			});
-		}
-
-
-		submitButton = findViewById(R.id.Send);
-		submitButton.setActivated(false);
-		submitButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				sendMessage = true;
-			}
-		});
-
-		FloatingActionButton fab = findViewById(R.id.fab);
-		fab.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-			}
-		});
-	}
+        submitButton = findViewById(R.id.Send);
+        submitButton.setActivated(false);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendMessage = true;
+            }
+        });
+    }
 
 	private void inflateContactsList() {
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
