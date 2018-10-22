@@ -7,15 +7,13 @@ import java.util.Map;
 
 public class RequestPackage {
     private String url;
-    private String method = "GET"; //method is set to GET by default
-    protected Map<String, String> params;//This will hold any values
+    private String method = "GET";
+    protected Map<String, String> params;
 
     public RequestPackage() {
         params = new HashMap<>();
     }
 
-    //that the server may require
-    // e.g. product_id
     public String getUrl() {
         return url;
     }
@@ -31,23 +29,6 @@ public class RequestPackage {
     public void setMethod(String method) {
         this.method = method;
     }
-
-    public Map<String, String> getParams() {
-        return params;
-    }
-
-    public void setParams(Map<String, String> params) {
-        this.params = params;
-    }
-
-    public void setParam(String key, String value) {
-        params.put(key, value); //adds a single value to the params member variable
-    }
-
-    //The method below is only called if the request method has been set to GET
-    //GET requests sends data in the url and it has to be encoded correctly in order
-    //for the server to understand the request. This method encodes the data in the
-    //params variable so that the server can understand the request
 
     public String getEncodedParams() {
         StringBuilder sb = new StringBuilder();

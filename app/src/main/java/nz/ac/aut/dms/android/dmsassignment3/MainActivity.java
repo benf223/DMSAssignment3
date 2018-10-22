@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 		setSupportActionBar(toolbar);
 
 		getPermissions();
-//		startGPS();
 
 		contacts = findViewById(R.id.contactsCheckBoxes);
 
@@ -89,16 +88,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 				}
 
 				for (Location location : locationResult.getLocations()) {
-					if (sendMessage)
-					{
+					if (sendMessage) {
 						generateRequest(location);
 					}
 				}
-			};
+			}
+
+			;
 		};
 
 		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 			mFusedLocationClient.requestLocationUpdates(r, mLocationCallback, null);
+		}
+
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+			mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+				@Override
+				public void onSuccess(Location location) {
+					if (location != null) {
+						generateRequest(location);
+					}
+				}
+			});
 		}
 
 
@@ -107,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 		submitButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-//				bestListener();
 				sendMessage = true;
 			}
 		});
@@ -118,51 +128,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 			public void onClick(View view) {
 			}
 		});
-	}
-
-	private void bestListener()
-	{
-		Log.e("dms0", "sending");
-		sendMessage = true;
-//		LocationManager manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-		if (ContextCompat.checkSelfPermission((Context) this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-//		    Location l = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//		    if  (l == null)
-//            {
-//                return;
-//            }
-
-			mFusedLocationClient.getLastLocation()
-					.addOnSuccessListener(this, new OnSuccessListener<Location>() {
-						@Override
-						public void onSuccess(Location location) {
-							// Got last known location. In some rare situations this can be null.
-							if (location != null) {
-								generateRequest(location);
-							}
-						}
-					});
-
-//			generateRequest(l);
-		}
-	}
-
-	private void startGPS()
-	{
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-		{
-			LocationManager manager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-			manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this, null);
-
-			manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		}
-	}
-
-	private void stopGPS() {
-		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		locationManager.removeUpdates(this);
 	}
 
 	private void inflateContactsList() {
@@ -231,27 +196,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 	}
 
 	protected void sendSMSMessage(String number, String location) {
-		if (!DEBUG) {
-			if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
-				try {
-					SmsManager smsManager = SmsManager.getDefault();
-					smsManager.sendTextMessage(number, null, location, null, null);
-					Toast.makeText(getApplicationContext(), "Location sent.", Toast.LENGTH_SHORT).show();
-				} catch (Exception e) {
-					Log.e("DMSERRor0", e.getLocalizedMessage());
-					Toast.makeText(getApplicationContext(), "Sending message failed, please try again.", Toast.LENGTH_SHORT).show();
-				}
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+			try {
+				SmsManager smsManager = SmsManager.getDefault();
+				smsManager.sendTextMessage(number, null, location, null, null);
+				Toast.makeText(getApplicationContext(), "Location sent.", Toast.LENGTH_SHORT).show();
+			} catch (Exception e) {
+				Toast.makeText(getApplicationContext(), "Sending message failed, please try again.", Toast.LENGTH_SHORT).show();
 			}
-		} else {
-			Toast.makeText(getApplicationContext(), "Number: " + number + " Location: " + location, Toast.LENGTH_SHORT);
 		}
 	}
-
-//	private void getLocation() {
-//		Location location =
-//		//https://maps.googleapis.com/maps/api/geocode/json?latlng=40.714224,-73.961452&key=YOUR_API_KEY
-//		// AIzaSyCMfm2KXoMkcwEFE-ORZjBseSIMYgmhK-g
-//	}
 
 	private void requestData(String url) {
 		RequestPackage requestPackage = new RequestPackage();
@@ -305,7 +259,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 		if (sendMessage)
 		{
 			String request = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + location.getLatitude() + "," + location.getLongitude() + "&key=AIzaSyCMfm2KXoMkcwEFE-ORZjBseSIMYgmhK-g";
-			Log.e("DMSsda0", request);
 			requestData(request);
 			sendMessage = false;
 		}
@@ -323,8 +276,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 			return HttpManager.getData(params[0]);
 		}
 
-		//The String that is returned in the doInBackground() method is sent to the
-		// onPostExecute() method below. The String should contain JSON data.
 		@Override
 		protected void onPostExecute(String result) {
 			try {
@@ -332,8 +283,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 				JSONArray results = jsonObject.getJSONArray("results");
 
-				//Now we can use the value in the mPriceTextView
-//				mPriceTextView.setText(price);
 				sendSMSMessages((String) ((JSONObject)results.get(1)).get("formatted_address"));
 			} catch (JSONException e) {
 				e.printStackTrace();

@@ -13,12 +13,6 @@ public class HttpManager {
         BufferedReader reader = null;
         String uri = requestPackage.getUrl();
 
-//        if (requestPackage.getMethod().equals("GET")) {
-//            uri += "?" + requestPackage.getEncodedParams();
-            //As mentioned before, this only executes if the request method has been
-            //set to GET
-//        }
-
         try {
             URL url = new URL(uri);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
